@@ -44,17 +44,20 @@ Turns the seeder into a full environment simulator with opt-in behavioural scena
 - [ ] TUI scenario browser and selector
 ---
  
-## Phase 4 — Walker (LLM Integration)
+## Phase 4 — Walker + LLM Behaviour Generation
  
-Adds an LLM-assisted layer for context narration, seed generation, and scenario authoring.
+The walker statically analyses the project to build context for the behaviour
+engine. The LLM uses that context to generate realistic, scenario-specific
+behaviour tests.
  
-- [ ] Walker core — inspects DB state and narrates in plain English
+- [ ] Walker core — scans project source to extract DB calls and API endpoints
 - [ ] `simulacrum walk` command
-- [ ] System prompt design for generation assist (schema + dictionary + salt config → seed suggestions)
+- [ ] Saves walker output as structured context (schema, call graph, endpoint map)
+- [ ] Context passed to behaviour engine as grounding for simulation
+- [ ] LLM integration — uses walker context + system prompt to generate behaviour tests
 - [ ] Scenario generation via natural language ("describe what you want to test")
 - [ ] TUI inline help (`?`) — context-aware, screen-sensitive
-- [ ] Environment diff narration — plain-English summary of what changed between scenarios
-- [ ] Onboarding mode — guided walkthrough of environment state for new developers
+- [ ] Onboarding mode — walker output surfaced to new developers as environment overview
 ---
  
 ## Future Considerations
