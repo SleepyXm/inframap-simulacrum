@@ -15,11 +15,18 @@ type Result struct {
 	TotalFiles     int
 	TotalEndpoints int
 	TotalDBCalls   int
+	DBCallKinds    map[string]int // add this
+	Endpoints      []ResultEndpoint
 	Languages      []string
 	DBLibraries    []string
 	JSONPath       string
 	YAMLPath       string
 	Err            error
+}
+
+type ResultEndpoint struct {
+	Method   string
+	FullPath string
 }
 
 // WalkDoneMsg is the bubbletea message delivered on completion.
@@ -157,16 +164,29 @@ func RunCmd(scanPath string) tea.Cmd {
 func summarise(ctx *ProjectContext) Result {
 	langSet := map[string]bool{}
 	libSet := map[string]bool{}
+	kindCounts := map[string]int{}
+	var endpoints []ResultEndpoint
 	totalEp := 0
 	totalDB := 0
 
 	for _, f := range ctx.Files {
 		langSet[string(f.Language)] = true
 		totalEp += len(f.Endpoints)
+
+		for _, ep := range f.Endpoints {
+			endpoints = append(endpoints, ResultEndpoint{
+				Method:   ep.Method,
+				FullPath: ep.FullPath,
+			})
+		}
+
 		for _, db := range f.DBCalls {
 			totalDB++
 			if db.Library != "" {
 				libSet[db.Library] = true
+			}
+			if db.Kind != "" {
+				kindCounts[db.Kind]++
 			}
 		}
 	}
@@ -184,6 +204,8 @@ func summarise(ctx *ProjectContext) Result {
 		TotalFiles:     len(ctx.Files),
 		TotalEndpoints: totalEp,
 		TotalDBCalls:   totalDB,
+		DBCallKinds:    kindCounts,
+		Endpoints:      endpoints,
 		Languages:      langs,
 		DBLibraries:    libs,
 	}

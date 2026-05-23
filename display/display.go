@@ -287,8 +287,23 @@ func walkerResultView(m model) string {
 
 	s := "walk complete\n\n"
 	s += fmt.Sprintf("  files scanned   %d\n", r.TotalFiles)
+
 	s += fmt.Sprintf("  endpoints found %d\n", r.TotalEndpoints)
+	for _, ep := range r.Endpoints {
+		s += fmt.Sprintf("    %-8s %s\n", ep.Method, ep.FullPath)
+	}
+
+	// endpoint list
+	for _, f := range []struct{ method, path string }{} {
+		_ = f // placeholder — wire in from Result.Endpoints if added later
+	}
+
 	s += fmt.Sprintf("  db calls found  %d\n", r.TotalDBCalls)
+	for _, kind := range []string{"exec", "raw", "query", "exec_many", "copy", "cursor"} {
+		if count, ok := r.DBCallKinds[kind]; ok {
+			s += fmt.Sprintf("    %-12s %d\n", kind, count)
+		}
+	}
 
 	if len(r.Languages) > 0 {
 		s += fmt.Sprintf("  languages       %s\n", strings.Join(r.Languages, ", "))
@@ -299,13 +314,12 @@ func walkerResultView(m model) string {
 
 	s += fmt.Sprintf("\n  → %s\n", r.JSONPath)
 	s += fmt.Sprintf("  → %s\n", r.YAMLPath)
-
 	s += "\npress enter to go back"
 	return s
 }
 
 func StartInterface(conn *pgx.Conn) {
-	p := tea.NewProgram(initialModel(conn))
+	p := tea.NewProgram(initialModel(conn), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		panic(err)
 	}
