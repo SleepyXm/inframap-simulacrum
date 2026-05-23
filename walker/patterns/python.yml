@@ -1,0 +1,265 @@
+language: python
+extensions:
+  - ".py"
+
+# ---------------------------------------------------------------------------
+# Router registration patterns
+# Matches the line where a route is actually defined.
+# Capture groups vary by framework — see method_group / path_group
+# ---------------------------------------------------------------------------
+router_registration:
+  # Flask — @app.route("/path", methods=["GET", "POST"])
+  - name: flask_route
+    pattern: '@(?:app|bp|blueprint)\.route\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "ANY"
+    note: "methods extracted from methods=[...] kwarg on same line"
+
+  - name: flask_route_methods
+    pattern: 'methods\s*=\s*\[([^\]]+)\]'
+    method_group: 1
+    note: "companion pattern to flask_route — resolves method list"
+
+  # Flask shorthand decorators
+  - name: flask_get
+    pattern: '@(?:app|bp|blueprint)\.get\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "GET"
+
+  - name: flask_post
+    pattern: '@(?:app|bp|blueprint)\.post\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "POST"
+
+  - name: flask_put
+    pattern: '@(?:app|bp|blueprint)\.put\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "PUT"
+
+  - name: flask_patch
+    pattern: '@(?:app|bp|blueprint)\.patch\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "PATCH"
+
+  - name: flask_delete
+    pattern: '@(?:app|bp|blueprint)\.delete\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "DELETE"
+
+  # FastAPI — @app.get("/path") / @router.post("/path")
+  - name: fastapi_get
+    pattern: '@\w+\.get\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "GET"
+
+  - name: fastapi_post
+    pattern: '@\w+\.post\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "POST"
+
+  - name: fastapi_put
+    pattern: '@\w+\.put\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "PUT"
+
+  - name: fastapi_patch
+    pattern: '@\w+\.patch\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "PATCH"
+
+  - name: fastapi_delete
+    pattern: '@\w+\.delete\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "DELETE"
+
+  # Django urls.py — path() and re_path()
+  - name: django_path
+    pattern: 'path\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "ANY"
+    note: "method constraints live on the view class — not inferrable from urls.py alone"
+
+  - name: django_re_path
+    pattern: 're_path\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "ANY"
+
+  - name: django_url
+    pattern: 'url\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "ANY"
+    note: "legacy django.conf.urls.url — deprecated but still common in older projects"
+
+  # Django REST Framework — @action decorator on ViewSets
+  - name: drf_action
+    pattern: '@action\s*\([^)]*methods\s*=\s*\[([^\]]+)\][^)]*url_path\s*=\s*[''"]([^''"]+)[''"]'
+    method_group: 1
+    path_group: 2
+
+  # Starlette (also used under FastAPI for mounts)
+  - name: starlette_route
+    pattern: 'Route\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "ANY"
+
+  - name: starlette_mount
+    pattern: 'Mount\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+    method: "ANY"
+
+# ---------------------------------------------------------------------------
+# Group / prefix patterns
+# Used by the bracket tracker to resolve full paths for nested routes.
+# ---------------------------------------------------------------------------
+group_prefix:
+  # Flask blueprints
+  - name: flask_blueprint_prefix
+    pattern: 'Blueprint\s*\([^)]*url_prefix\s*=\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+
+  - name: flask_register_blueprint
+    pattern: 'register_blueprint\s*\(\s*\w+\s*,\s*url_prefix\s*=\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+
+  # FastAPI include_router
+  - name: fastapi_include_router
+    pattern: 'include_router\s*\([^)]*prefix\s*=\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+
+  # Django namespace / app_name prefix (urls.py include())
+  - name: django_include
+    pattern: 'include\s*\(\s*[''"]([^''"]+)[''"]'
+    path_group: 1
+
+# ---------------------------------------------------------------------------
+# DB call patterns
+# Matches query execution sites across common Python DB libraries.
+# ---------------------------------------------------------------------------
+db_calls:
+  # psycopg2 / psycopg3
+  - name: psycopg_execute
+    pattern: '(?:cursor|cur|c)\.execute\s*\(\s*[''"`]([^''"`]+)[''"`]'
+    library: "psycopg"
+    kind: "exec"
+
+  - name: psycopg_executemany
+    pattern: '(?:cursor|cur|c)\.executemany\s*\(\s*[''"`]([^''"`]+)[''"`]'
+    library: "psycopg"
+    kind: "exec_many"
+
+  - name: psycopg_copy
+    pattern: '(?:cursor|cur|c)\.copy\s*\('
+    library: "psycopg"
+    kind: "copy"
+
+  # SQLAlchemy core — engine.execute / connection.execute
+  - name: sqlalchemy_execute
+    pattern: '(?:engine|conn|connection|session)\.execute\s*\(\s*(?:text\s*\(\s*)?[''"`]([^''"`]+)[''"`]'
+    library: "sqlalchemy"
+    kind: "exec"
+
+  # SQLAlchemy ORM
+  - name: sqlalchemy_query
+    pattern: '(?:session|db)\.query\s*\(\s*\w+'
+    library: "sqlalchemy"
+    kind: "query"
+
+  - name: sqlalchemy_add
+    pattern: '(?:session|db)\.add\s*\(\s*\w+'
+    library: "sqlalchemy"
+    kind: "exec"
+
+  - name: sqlalchemy_delete
+    pattern: '(?:session|db)\.delete\s*\(\s*\w+'
+    library: "sqlalchemy"
+    kind: "exec"
+
+  - name: sqlalchemy_merge
+    pattern: '(?:session|db)\.merge\s*\(\s*\w+'
+    library: "sqlalchemy"
+    kind: "exec"
+
+  - name: sqlalchemy_text
+    pattern: 'text\s*\(\s*[''"`]([^''"`]+)[''"`]'
+    library: "sqlalchemy"
+    kind: "raw"
+    note: "text() wraps a raw SQL string — always paired with an execute call"
+
+  # Django ORM
+  - name: django_filter
+    pattern: '\w+\.objects\.filter\s*\('
+    library: "django_orm"
+    kind: "query"
+
+  - name: django_get
+    pattern: '\w+\.objects\.get\s*\('
+    library: "django_orm"
+    kind: "query_row"
+
+  - name: django_create
+    pattern: '\w+\.objects\.create\s*\('
+    library: "django_orm"
+    kind: "exec"
+
+  - name: django_update
+    pattern: '\w+\.objects\.update\s*\('
+    library: "django_orm"
+    kind: "exec"
+
+  - name: django_delete
+    pattern: '\w+\.objects\.(?:filter|all)\s*\([^)]*\)\.delete\s*\('
+    library: "django_orm"
+    kind: "exec"
+
+  - name: django_raw
+    pattern: '\w+\.objects\.raw\s*\(\s*[''"`]([^''"`]+)[''"`]'
+    library: "django_orm"
+    kind: "raw"
+
+  - name: django_cursor
+    pattern: 'connection\.cursor\s*\(\s*\)'
+    library: "django_orm"
+    kind: "cursor"
+    note: "raw cursor — execute call on the cursor object will follow"
+
+  # Tortoise ORM
+  - name: tortoise_filter
+    pattern: '\w+\.filter\s*\('
+    library: "tortoise"
+    kind: "query"
+
+  - name: tortoise_create
+    pattern: '\w+\.create\s*\('
+    library: "tortoise"
+    kind: "exec"
+
+  - name: tortoise_raw
+    pattern: '\w+\.raw\s*\(\s*[''"`]([^''"`]+)[''"`]'
+    library: "tortoise"
+    kind: "raw"
+
+# ---------------------------------------------------------------------------
+# Skip rules
+# ---------------------------------------------------------------------------
+skip:
+  dirs:
+    - __pycache__
+    - .git
+    - .venv
+    - venv
+    - env
+    - node_modules
+    - dist
+    - build
+    - migrations
+    - .mypy_cache
+    - .pytest_cache
+  files:
+    - "test_*.py"
+    - "*_test.py"
+    - "conftest.py"
+    - "setup.py"
+    - "manage.py"
+    - "wsgi.py"
+    - "asgi.py"
+    - "* copy.py"

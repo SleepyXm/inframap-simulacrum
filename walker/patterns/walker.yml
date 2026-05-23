@@ -1,0 +1,98 @@
+# walkerfile.yml
+# Project-level configuration for inframap-simulacrum walker.
+# Place this file in the root of the project you want to scan.
+
+# ---------------------------------------------------------------------------
+# Scan target
+# Overridden by --path flag if provided.
+# ---------------------------------------------------------------------------
+path: "."
+
+# ---------------------------------------------------------------------------
+# Structs
+# Which language struct files to load from the structs/ directory.
+# "auto" detects by file extension — recommended for polyglot projects.
+# Explicit list overrides auto-detection.
+# ---------------------------------------------------------------------------
+structs: auto
+# structs:
+#   - go
+#   - python
+
+# ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+output:
+  # Structured endpoint + function map — consumed by the behaviour engine
+  json:
+    path: ".walker/context.json"
+    pretty: true
+
+  # Narrative behaviour context — consumed by LLM / TUI walker
+  yaml:
+    path: ".walker/context.yml"
+
+# ---------------------------------------------------------------------------
+# Scanner behaviour
+# ---------------------------------------------------------------------------
+scanner:
+  # Follow symlinks during directory traversal
+  follow_symlinks: false
+
+  # Maximum directory depth (0 = unlimited)
+  max_depth: 0
+
+  # Additional directories to skip on top of per-language struct skip rules
+  skip_dirs:
+    - ".walker"
+    - ".git"
+    - "vendor"
+    - "node_modules"
+
+  # Additional file patterns to skip
+  skip_files: []
+
+  # Only scan files matching these glob patterns (empty = scan all)
+  include_only: []
+
+# ---------------------------------------------------------------------------
+# Bracket tracker
+# Controls how the walker resolves nested route groups and prefixes.
+# ---------------------------------------------------------------------------
+bracket_tracker:
+  # Maximum nesting depth to track
+  max_depth: 10
+
+  # Carry group context across function boundaries
+  # Needed for Go routers where routes are defined inside funcs passed to Group()
+  cross_function_scope: true
+
+# ---------------------------------------------------------------------------
+# Custom patterns
+# Extend or override patterns from the struct files without editing them.
+# Useful for internal frameworks or non-standard naming conventions.
+# ---------------------------------------------------------------------------
+custom_patterns:
+  router_registration: []
+  group_prefix: []
+  db_calls: []
+
+# ---------------------------------------------------------------------------
+# Context output shape
+# Controls what gets included in context.json and context.yml.
+# ---------------------------------------------------------------------------
+context:
+  # Include raw matched line alongside extracted values
+  include_raw_line: false
+
+  # Include line numbers in output
+  include_line_numbers: true
+
+  # Include function/handler name associated with each endpoint
+  include_handler: true
+
+  # Include inferred DB call kind (query / exec / raw etc.)
+  include_db_kind: true
+
+  # Group output by file (true) or flatten to a single list (false)
+  group_by_file: true

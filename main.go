@@ -6,6 +6,7 @@ import (
 	"context"
 	"db-seeder/db"
 	"db-seeder/display"
+	"db-seeder/walker"
 	"fmt"
 	"log"
 	//"log"
@@ -26,5 +27,10 @@ func main() {
 	//if err != nil {
 	//	log.Fatal("Seeding failed:", err)
 	//	}
+
+	if err := walker.Init(); err != nil {
+		fmt.Printf("walker unavailable: %v\n", err)
+	}
+
 	display.StartInterface(conn)
 }

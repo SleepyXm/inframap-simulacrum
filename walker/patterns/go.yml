@@ -1,0 +1,178 @@
+language: go
+extensions:
+  - ".go"
+ 
+# ---------------------------------------------------------------------------
+# Router registration patterns
+# Matches the line where a route is actually defined.
+# Capture groups: (1) method, (2) path
+# ---------------------------------------------------------------------------
+router_registration:
+  # net/http stdlib
+  - name: http_handlefunc
+    pattern: '(?:http|mux|servemux)\.HandleFunc\s*\(\s*"([^"]+)"'
+    method: "ANY"
+    note: "stdlib — method extracted from handler body if needed"
+ 
+  # chi
+  - name: chi_method
+    pattern: '\br\.(Get|Post|Put|Patch|Delete|Head|Options)\s*\(\s*"([^"]+)"'
+    method_group: 1
+    path_group: 2
+ 
+  # gin
+  - name: gin_method
+    pattern: '(?:r|router|engine|g)\.(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s*\(\s*"([^"]+)"'
+    method_group: 1
+    path_group: 2
+ 
+  # echo
+  - name: echo_method
+    pattern: '(?:e|echo|g)\.(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s*\(\s*"([^"]+)"'
+    method_group: 1
+    path_group: 2
+ 
+  # gorilla/mux
+  - name: gorilla_methods
+    pattern: '\.HandleFunc\s*\(\s*"([^"]+)"'
+    method: "ANY"
+ 
+  # fiber
+  - name: fiber_method
+    pattern: '(?:app|g)\.(Get|Post|Put|Patch|Delete|Head|Options)\s*\(\s*"([^"]+)"'
+    method_group: 1
+    path_group: 2
+ 
+# ---------------------------------------------------------------------------
+# Group / prefix patterns
+# Used by the bracket tracker to resolve full paths for nested routes.
+# Capture groups: (1) prefix path
+# ---------------------------------------------------------------------------
+group_prefix:
+  # chi
+  - name: chi_route
+    pattern: '\br\.Route\s*\(\s*"([^"]+)"'
+    path_group: 1
+ 
+  # chi mount
+  - name: chi_mount
+    pattern: '\br\.Mount\s*\(\s*"([^"]+)"'
+    path_group: 1
+ 
+  # gin group
+  - name: gin_group
+    pattern: '\.Group\s*\(\s*"([^"]+)"'
+    path_group: 1
+ 
+  # echo group
+  - name: echo_group
+    pattern: '\.Group\s*\(\s*"([^"]+)"'
+    path_group: 1
+ 
+  # fiber group
+  - name: fiber_group
+    pattern: '\.Group\s*\(\s*"([^"]+)"'
+    path_group: 1
+ 
+  # stdlib sub-path (ServeMux prefix)
+  - name: http_handle_prefix
+    pattern: '(?:http|mux|servemux)\.Handle\s*\(\s*"([^"]+)"'
+    path_group: 1
+ 
+# ---------------------------------------------------------------------------
+# DB call patterns
+# Matches query execution sites.
+# Capture groups: (1) query string where available
+# ---------------------------------------------------------------------------
+db_calls:
+  # database/sql
+  - name: sql_query
+    pattern: '\.Query(?:Context)?\s*\([^,)]*,?\s*`([^`]+)`'
+    library: "database/sql"
+    kind: "query"
+ 
+  - name: sql_exec
+    pattern: '\.Exec(?:Context)?\s*\([^,)]*,?\s*`([^`]+)`'
+    library: "database/sql"
+    kind: "exec"
+ 
+  - name: sql_queryrow
+    pattern: '\.QueryRow(?:Context)?\s*\([^,)]*,?\s*`([^`]+)`'
+    library: "database/sql"
+    kind: "query_row"
+ 
+  - name: sql_prepare
+    pattern: '\.Prepare(?:Context)?\s*\([^,)]*,?\s*`([^`]+)`'
+    library: "database/sql"
+    kind: "prepare"
+ 
+  # pgx — pool and conn variants
+  - name: pgx_query
+    pattern: '(?:pool|conn|db|tx)\.Query(?:Row)?\s*\([^,)]*,?\s*`([^`]+)`'
+    library: "pgx"
+    kind: "query"
+ 
+  - name: pgx_exec
+    pattern: '(?:pool|conn|db|tx)\.Exec\s*\([^,)]*,?\s*`([^`]+)`'
+    library: "pgx"
+    kind: "exec"
+ 
+  - name: pgx_sendquery
+    pattern: '(?:pool|conn|db|tx)\.SendBatch\s*\('
+    library: "pgx"
+    kind: "batch"
+    note: "batch — query strings inside pgx.Batch{} blocks"
+ 
+  # gorm
+  - name: gorm_find
+    pattern: '\.Find\s*\(&?\w+'
+    library: "gorm"
+    kind: "query"
+ 
+  - name: gorm_first
+    pattern: '\.First\s*\(&?\w+'
+    library: "gorm"
+    kind: "query_row"
+ 
+  - name: gorm_create
+    pattern: '\.Create\s*\(&?\w+'
+    library: "gorm"
+    kind: "exec"
+ 
+  - name: gorm_save
+    pattern: '\.Save\s*\(&?\w+'
+    library: "gorm"
+    kind: "exec"
+ 
+  - name: gorm_delete
+    pattern: '\.Delete\s*\(&?\w+'
+    library: "gorm"
+    kind: "exec"
+ 
+  - name: gorm_raw
+    pattern: '\.Raw\s*\(\s*`([^`]+)`'
+    library: "gorm"
+    kind: "raw"
+ 
+  - name: gorm_exec
+    pattern: '\.Exec\s*\(\s*`([^`]+)`'
+    library: "gorm"
+    kind: "exec"
+ 
+# ---------------------------------------------------------------------------
+# Skip rules
+# Files and directories to ignore during scanning.
+# ---------------------------------------------------------------------------
+skip:
+  dirs:
+    - vendor
+    - .git
+    - node_modules
+    - dist
+    - build
+    - testdata
+  files:
+    - "*_test.go"
+    - "mock_*.go"
+    - "*.pb.go"        # protobuf generated
+    - "*.gen.go"       # any generated file
