@@ -19,6 +19,7 @@ type Matcher struct {
 	routerPatterns []compiledPattern
 	groupPatterns  []compiledPattern
 	dbPatterns     []compiledPattern
+	modelPatterns  []compiledPattern
 }
 
 // NewMatcher compiles all patterns from a LanguageStruct.
@@ -34,6 +35,10 @@ func NewMatcher(ls *LanguageStruct, bracketCfg BracketConfig, ctxCfg ContextConf
 		return nil, err
 	}
 	if m.dbPatterns, err = compilePatterns(ls.DBCalls); err != nil {
+		return nil, err
+	}
+
+	if m.modelPatterns, err = compilePatterns(ls.Models); err != nil {
 		return nil, err
 	}
 
@@ -53,13 +58,18 @@ type dbKey struct {
 	kind    string
 }
 
-func (m *Matcher) Match(f File) ([]Endpoint, []DBCall) {
+func (m *Matcher) Match(f File) ([]Endpoint, []DBCall, []ModelDef) {
 	prefixStack := newPrefixStack(m.cfg.MaxDepth)
 	var currentHandler string
 
 	var endpoints []Endpoint
 	var dbCalls []DBCall
+	var models []ModelDef
 
+	seenModel := map[struct {
+		line int
+		name string
+	}]bool{}
 	seenEp := map[epKey]bool{}
 	seenDB := map[dbKey]bool{}
 
@@ -92,9 +102,10 @@ func (m *Matcher) Match(f File) ([]Endpoint, []DBCall) {
 
 		endpoints = m.matchEndpoints(trimmed, lineNum, currentHandler, prefixStack, seenEp, endpoints)
 		dbCalls = m.matchDBCalls(trimmed, lineNum, currentHandler, seenDB, dbCalls)
+		models = m.matchModels(trimmed, lineNum, seenModel, models)
 	}
 
-	return endpoints, dbCalls
+	return endpoints, dbCalls, models
 }
 
 func (m *Matcher) matchEndpoints(
@@ -209,6 +220,38 @@ func (m *Matcher) matchGroupPrefix(line string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (m *Matcher) matchModels(
+	trimmed string,
+	lineNum int,
+	seen map[struct {
+		line int
+		name string
+	}]bool,
+	models []ModelDef,
+) []ModelDef {
+	for _, pat := range m.modelPatterns {
+		matches := pat.re.FindStringSubmatch(trimmed)
+		if matches == nil {
+			continue
+		}
+		name := matches[1]
+		key := struct {
+			line int
+			name string
+		}{lineNum, name}
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		models = append(models, ModelDef{
+			Name: name,
+			Kind: pat.src.Kind,
+			Line: lineNum,
+		})
+	}
+	return models
 }
 
 // ---------------------------------------------------------------------------

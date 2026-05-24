@@ -14,7 +14,7 @@ import (
 
 func main() {
 	fmt.Println("Hello, World!")
-	//db.CreateDatabase()
+	db.CreateDatabase()
 	conn, err := db.Connect()
 	if err != nil {
 		log.Fatal(err)

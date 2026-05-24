@@ -16,7 +16,7 @@ var ExtensionLanguage = map[string]Language{
 }
 
 // ---------------------------------------------------------------------------
-// Struct file types (loaded from structs/*.yml)
+// Struct file types (loaded from walkers/patterns/*.yml)
 // ---------------------------------------------------------------------------
 
 // Pattern is a single named regex pattern from a struct file.
@@ -37,13 +37,14 @@ type SkipRules struct {
 	Files []string `yaml:"files"`
 }
 
-// LanguageStruct is the parsed representation of a structs/*.yml file.
+// LanguageStruct is the parsed representation of a walker/patterns/*.yml file.
 type LanguageStruct struct {
 	Language           Language  `yaml:"language"`
 	Extensions         []string  `yaml:"extensions"`
 	RouterRegistration []Pattern `yaml:"router_registration"`
 	GroupPrefix        []Pattern `yaml:"group_prefix"`
 	DBCalls            []Pattern `yaml:"db_calls"`
+	Models             []Pattern `yaml:"models"`
 	Skip               SkipRules `yaml:"skip"`
 }
 
@@ -93,6 +94,7 @@ type CustomPatterns struct {
 	RouterRegistration []Pattern `yaml:"router_registration"`
 	GroupPrefix        []Pattern `yaml:"group_prefix"`
 	DBCalls            []Pattern `yaml:"db_calls"`
+	Models             []Pattern `yaml:"models"`
 }
 
 type ContextConfig struct {
@@ -118,8 +120,18 @@ type FileContext struct {
 	Language  Language   `json:"language"`
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	DBCalls   []DBCall   `json:"db_calls,omitempty"`
+	Models    []ModelDef `json:"models,omitempty"`
 }
 
+// ModelDef represents a detected data model (SQLAlchemy, Pydantic, Go struct).
+type ModelDef struct {
+	Name   string            `json:"name"`
+	Kind   string            `json:"kind"` // "db_model", "request_model", "struct"
+	Line   int               `json:"line,omitempty"`
+	Fields map[string]string `json:"fields,omitempty"`
+}
+
+// ------------------ Specifics of extracted data types ------------------
 // Endpoint represents a single matched route registration.
 type Endpoint struct {
 	Method   string `json:"method"`
@@ -140,8 +152,4 @@ type DBCall struct {
 	RawLine string `json:"raw_line,omitempty"`
 }
 
-type SeenKey struct {
-	line   int
-	method string
-	path   string
-}
+/// ------------------ Internal types (not serialized) ------------------

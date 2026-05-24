@@ -15,8 +15,10 @@ type Result struct {
 	TotalFiles     int
 	TotalEndpoints int
 	TotalDBCalls   int
+	TotalModels    int
 	DBCallKinds    map[string]int // add this
 	Endpoints      []ResultEndpoint
+	Models         []ResultModel
 	Languages      []string
 	DBLibraries    []string
 	JSONPath       string
@@ -27,6 +29,11 @@ type Result struct {
 type ResultEndpoint struct {
 	Method   string
 	FullPath string
+}
+
+type ResultModel struct {
+	Name string
+	Kind string
 }
 
 // WalkDoneMsg is the bubbletea message delivered on completion.
@@ -133,8 +140,8 @@ func RunCmd(scanPath string) tea.Cmd {
 			if !ok {
 				continue
 			}
-			endpoints, dbCalls := m.Match(f)
-			if len(endpoints) == 0 && len(dbCalls) == 0 {
+			endpoints, dbCalls, models := m.Match(f)
+			if len(endpoints) == 0 && len(dbCalls) == 0 && len(models) == 0 {
 				continue
 			}
 			ctx.Files = append(ctx.Files, FileContext{
@@ -142,6 +149,7 @@ func RunCmd(scanPath string) tea.Cmd {
 				Language:  f.Language,
 				Endpoints: endpoints,
 				DBCalls:   dbCalls,
+				Models:    models,
 			})
 		}
 
@@ -166,8 +174,10 @@ func summarise(ctx *ProjectContext) Result {
 	libSet := map[string]bool{}
 	kindCounts := map[string]int{}
 	var endpoints []ResultEndpoint
+	var models []ResultModel
 	totalEp := 0
 	totalDB := 0
+	totalModels := 0
 
 	for _, f := range ctx.Files {
 		langSet[string(f.Language)] = true
@@ -189,6 +199,14 @@ func summarise(ctx *ProjectContext) Result {
 				kindCounts[db.Kind]++
 			}
 		}
+
+		for _, model := range f.Models {
+			totalModels++
+			models = append(models, ResultModel{
+				Name: model.Name,
+				Kind: model.Kind,
+			})
+		}
 	}
 
 	langs := make([]string, 0, len(langSet))
@@ -204,8 +222,10 @@ func summarise(ctx *ProjectContext) Result {
 		TotalFiles:     len(ctx.Files),
 		TotalEndpoints: totalEp,
 		TotalDBCalls:   totalDB,
+		TotalModels:    totalModels,
 		DBCallKinds:    kindCounts,
 		Endpoints:      endpoints,
+		Models:         models,
 		Languages:      langs,
 		DBLibraries:    libs,
 	}
