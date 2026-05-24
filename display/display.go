@@ -293,16 +293,16 @@ func walkerResultView(m model) string {
 		s += fmt.Sprintf("    %-8s %s\n", ep.Method, ep.FullPath)
 	}
 
-	// endpoint list
-	for _, f := range []struct{ method, path string }{} {
-		_ = f // placeholder — wire in from Result.Endpoints if added later
-	}
-
 	s += fmt.Sprintf("  db calls found  %d\n", r.TotalDBCalls)
 	for _, kind := range []string{"exec", "raw", "query", "exec_many", "copy", "cursor"} {
 		if count, ok := r.DBCallKinds[kind]; ok {
 			s += fmt.Sprintf("    %-12s %d\n", kind, count)
 		}
+	}
+
+	s += fmt.Sprintf("  models found    %d\n", r.TotalModels)
+	for _, model := range r.Models {
+		s += fmt.Sprintf("    %-12s %s\n", model.Kind, model.Name)
 	}
 
 	if len(r.Languages) > 0 {

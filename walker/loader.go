@@ -139,4 +139,5 @@ func mergeCustomPatterns(ls *LanguageStruct, custom CustomPatterns) {
 	ls.RouterRegistration = append(ls.RouterRegistration, custom.RouterRegistration...)
 	ls.GroupPrefix = append(ls.GroupPrefix, custom.GroupPrefix...)
 	ls.DBCalls = append(ls.DBCalls, custom.DBCalls...)
+	ls.Models = append(ls.Models, custom.Models...)
 }

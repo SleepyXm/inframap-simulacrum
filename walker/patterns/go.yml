@@ -158,6 +158,16 @@ db_calls:
     pattern: '\.Exec\s*\(\s*`([^`]+)`'
     library: "gorm"
     kind: "exec"
+
+
+# ---------------------------------------------------------------------------
+# Model / schema definitions
+# Matches class definitions for common Go data modeling libraries.
+# ---------------------------------------------------------------------------
+models:
+  - name: go_struct
+    pattern: '^type\s+(\w+)\s+struct\s*\{'
+    kind: "struct"
  
 # ---------------------------------------------------------------------------
 # Skip rules

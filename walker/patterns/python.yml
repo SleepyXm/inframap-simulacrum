@@ -238,6 +238,25 @@ db_calls:
     library: "tortoise"
     kind: "raw"
 
+
+# ---------------------------------------------------------------------------
+# Model / schema definitions
+# Matches class definitions for common Python data modeling libraries.
+# ---------------------------------------------------------------------------
+
+models:
+  - name: sqlalchemy_model
+    pattern: '^class\s+(\w+)\s*\(\s*Base\s*\)'
+    kind: "db_model"
+
+  - name: pydantic_model  
+    pattern: '^class\s+(\w+)\s*\(\s*BaseModel\s*\)'
+    kind: "request_model"
+
+  - name: pydantic_schema
+    pattern: '^class\s+(\w+)\s*\(\s*BaseSchema\s*\)'
+    kind: "schema"
+
 # ---------------------------------------------------------------------------
 # Skip rules
 # ---------------------------------------------------------------------------
