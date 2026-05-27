@@ -9,7 +9,8 @@ const (
 	LangUnknown Language = "unknown"
 )
 
-// ExtensionLanguage maps file extensions to languages.
+// ExtensionLanguage maps file extensions to Language constants.
+// Kept here so scanner.go has no loader dependency.
 var ExtensionLanguage = map[string]Language{
 	".go": LangGo,
 	".py": LangPython,
