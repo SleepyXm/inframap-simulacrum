@@ -16,9 +16,9 @@ func GenPerson() structs.Person {
 	return structs.Person{
 		Firstname: Firstname,
 		Lastname:  Lastname,
-		Email:     genEmail(Firstname, Lastname),
-		Username:  genUsername(Firstname, Lastname),
-		Password:  genPassword(""),
+		Email:     GenEmail(Firstname, Lastname),
+		Username:  GenUsername(Firstname, Lastname),
+		Password:  GenPassword(""),
 	}
 }
 
@@ -52,7 +52,7 @@ func EmailBaseGen(Firstpart, Lastpart string) string {
 	return Firstpart + Lastpart
 }
 
-func genPassword(password string) string {
+func GenPassword(password string) string {
 	// Generate a random password using common words, safe symbols, number ranges, animals
 	word := structs.CommonWords[rand.Intn(len(structs.CommonWords))]
 	symbol := structs.SafeSymbols[rand.Intn(len(structs.SafeSymbols))]
@@ -61,7 +61,7 @@ func genPassword(password string) string {
 	password = fmt.Sprintf("%s%s%d", word, symbol, number)
 
 	if len(password) < 13 {
-		// If the generated password is less than 13 characters, add another word to the word
+		// If the Generated password is less than 13 characters, add another word to the word
 
 		word += structs.CommonWords[rand.Intn(len(structs.CommonWords))]
 		password = fmt.Sprintf("%s%s%d", word, symbol, number)
@@ -72,15 +72,15 @@ func genPassword(password string) string {
 	return password
 }
 
-func genUsername(firstname, lastname string) string {
+func GenUsername(firstname, lastname string) string {
 	// 50/50 chance of either mode
 	if rand.Intn(2) == 0 {
-		return nameBasedUsername(firstname, lastname)
+		return NameBasedUsername(firstname, lastname)
 	}
-	return wordBasedUsername()
+	return WordBasedUsername()
 }
 
-func nameBasedUsername(firstname, lastname string) string {
+func NameBasedUsername(firstname, lastname string) string {
 	// random slice of firstname, min 1 char
 	fnLen := rand.Intn(len(firstname)) + 1
 	firstPart := firstname[:fnLen]
@@ -103,8 +103,8 @@ func nameBasedUsername(firstname, lastname string) string {
 	return firstPart + lastPart + fmt.Sprintf("%d", id)
 }
 
-func wordBasedUsername() string {
-	// same vibe as your password generator — combine abstract/common words
+func WordBasedUsername() string {
+	// same vibe as your password Generator — combine abstract/common words
 	word1 := structs.CommonWords[rand.Intn(len(structs.CommonWords))]
 	word2 := structs.AbstractWords[rand.Intn(len(structs.AbstractWords))]
 
@@ -122,7 +122,7 @@ func wordBasedUsername() string {
 	return word1 + word2 + suffix
 }
 
-func genEmail(firstname, lastname string) string {
+func GenEmail(firstname, lastname string) string {
 	batch := make([]string, 100000)
 
 	fnLen := rand.Intn(len(firstname)) + 1
