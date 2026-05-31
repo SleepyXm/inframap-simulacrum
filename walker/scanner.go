@@ -1,6 +1,7 @@
 package walker
 
 import (
+	"db-seeder/walker/types"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -10,23 +11,23 @@ import (
 // File represents a source file ready for pattern matching.
 type File struct {
 	Path     string
-	Language Language
+	Language types.Language
 	Lines    []string
 }
 
 // Scanner walks a directory tree and returns source files to scan.
 type Scanner struct {
-	cfg     ScannerConfig
-	structs map[Language]*LanguageStruct
+	cfg     types.ScannerConfig
+	structs map[types.Language]*types.LanguageStruct
 }
 
 // New creates a Scanner with the given config and loaded structs.
-func New(cfg ScannerConfig, structs map[Language]*LanguageStruct) *Scanner {
+func New(cfg types.ScannerConfig, structs map[types.Language]*types.LanguageStruct) *Scanner {
 	return &Scanner{cfg: cfg, structs: structs}
 }
 
 // Walk traverses root and returns all scannable source files.
-func (s *Scanner) Walk(root string) ([]File, error) {
+func (scanner *Scanner) Walk(root string) ([]File, error) {
 	var files []File
 
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -35,20 +36,20 @@ func (s *Scanner) Walk(root string) ([]File, error) {
 		}
 
 		// Skip symlinks unless configured to follow
-		if !s.cfg.FollowSymlinks && d.Type()&fs.ModeSymlink != 0 {
+		if !scanner.cfg.FollowSymlinks && d.Type()&fs.ModeSymlink != 0 {
 			return nil
 		}
 
 		if d.IsDir() {
-			if s.shouldSkipDir(path, d.Name()) {
+			if scanner.shouldSkipDir(path, d.Name()) {
 				return filepath.SkipDir
 			}
 			// Enforce max depth
-			if s.cfg.MaxDepth > 0 {
+			if scanner.cfg.MaxDepth > 0 {
 				rel, err := filepath.Rel(root, path)
 				if err == nil {
 					depth := len(strings.Split(rel, string(os.PathSeparator)))
-					if depth > s.cfg.MaxDepth {
+					if depth > scanner.cfg.MaxDepth {
 						return filepath.SkipDir
 					}
 				}
@@ -58,25 +59,25 @@ func (s *Scanner) Walk(root string) ([]File, error) {
 
 		// Detect language by extension
 		ext := strings.ToLower(filepath.Ext(path))
-		lang, ok := ExtensionLanguage[ext]
+		lang, ok := types.ExtensionLanguage[ext]
 		if !ok {
 			return nil // not a language we handle
 		}
 
 		// Apply include_only filter if set
-		if len(s.cfg.IncludeOnly) > 0 && !s.matchesAny(d.Name(), s.cfg.IncludeOnly) {
+		if len(scanner.cfg.IncludeOnly) > 0 && !scanner.matchesAny(d.Name(), scanner.cfg.IncludeOnly) {
 			return nil
 		}
 
 		// Apply per-language file skip rules
-		if ls, ok := s.structs[lang]; ok {
-			if s.matchesAny(d.Name(), ls.Skip.Files) {
+		if ls, ok := scanner.structs[lang]; ok {
+			if scanner.matchesAny(d.Name(), ls.Skip.Files) {
 				return nil
 			}
 		}
 
 		// Apply global file skip rules from walkerfile
-		if s.matchesAny(d.Name(), s.cfg.SkipFiles) {
+		if scanner.matchesAny(d.Name(), scanner.cfg.SkipFiles) {
 			return nil
 		}
 
@@ -98,16 +99,16 @@ func (s *Scanner) Walk(root string) ([]File, error) {
 }
 
 // shouldSkipDir returns true if a directory should be skipped entirely.
-func (s *Scanner) shouldSkipDir(path, name string) bool {
+func (scanner *Scanner) shouldSkipDir(path, name string) bool {
 	// Global skip dirs from walkerfile
-	for _, skip := range s.cfg.SkipDirs {
+	for _, skip := range scanner.cfg.SkipDirs {
 		if name == skip {
 			return true
 		}
 	}
 
 	// Per-language skip dirs from struct files
-	for _, ls := range s.structs {
+	for _, ls := range scanner.structs {
 		for _, skip := range ls.Skip.Dirs {
 			if name == skip {
 				return true

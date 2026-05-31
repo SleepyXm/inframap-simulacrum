@@ -2,6 +2,7 @@ package walker
 
 import (
 	"db-seeder/tools"
+	"db-seeder/walker/types"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -11,8 +12,8 @@ import (
 
 // WalkerTool implements tools.Tool.
 type WalkerTool struct {
-	wf      *WalkerFile
-	structs map[Language]*LanguageStruct
+	wf      *types.WalkerFile
+	structs map[types.Language]*types.LanguageStruct
 	ready   bool
 }
 
@@ -50,7 +51,7 @@ func (t *WalkerTool) run(scanPath string) tools.ToolResult {
 		return tools.ToolResult{Err: fmt.Errorf("scan failed: %w", err)}
 	}
 
-	matchers := map[Language]*Matcher{}
+	matchers := map[types.Language]*Matcher{}
 	for lang, ls := range t.structs {
 		m, err := NewMatcher(ls, t.wf.Bracket, t.wf.Context)
 		if err != nil {
@@ -59,24 +60,16 @@ func (t *WalkerTool) run(scanPath string) tools.ToolResult {
 		matchers[lang] = m
 	}
 
-	ctx := &ProjectContext{}
-	for _, f := range files {
-		m, ok := matchers[f.Language]
-		if !ok {
-			continue
+	ctx := NewResolver(matchers, files, t.wf.Context).Resolve()
+
+	// Drop files with no extracted data, consistent with previous behaviour.
+	filtered := ctx.Files[:0]
+	for _, fc := range ctx.Files {
+		if len(fc.Endpoints) > 0 || len(fc.DBCalls) > 0 || len(fc.Models) > 0 {
+			filtered = append(filtered, fc)
 		}
-		endpoints, dbCalls, models := m.Match(f)
-		if len(endpoints) == 0 && len(dbCalls) == 0 && len(models) == 0 {
-			continue
-		}
-		ctx.Files = append(ctx.Files, FileContext{
-			Path:      f.Path,
-			Language:  f.Language,
-			Endpoints: endpoints,
-			DBCalls:   dbCalls,
-			Models:    models,
-		})
 	}
+	ctx.Files = filtered
 
 	if err := WriteJSON(ctx, t.wf.Output.JSON); err != nil {
 		return tools.ToolResult{Err: err}
@@ -91,7 +84,7 @@ func (t *WalkerTool) run(scanPath string) tools.ToolResult {
 	}
 }
 
-func summariseToLines(ctx *ProjectContext) []tools.SummaryLine {
+func summariseToLines(ctx *types.ProjectContext) []tools.SummaryLine {
 	var lines []tools.SummaryLine
 
 	langSet := map[string]bool{}

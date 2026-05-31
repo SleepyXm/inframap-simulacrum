@@ -1,6 +1,7 @@
 package walker
 
 import (
+	"db-seeder/walker/types"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 
 const WalkerFileName = "walkerfile.yml"
 
-func LoadWalkerFile(dir string) (*WalkerFile, error) {
+func LoadWalkerFile(dir string) (*types.WalkerFile, error) {
 	if dir == "" {
 		var err error
 		dir, err = os.Getwd()
@@ -28,7 +29,7 @@ func LoadWalkerFile(dir string) (*WalkerFile, error) {
 		return nil, fmt.Errorf("reading walkerfile: %w", err)
 	}
 
-	var wf WalkerFile
+	var wf types.WalkerFile
 	if err := yaml.Unmarshal(data, &wf); err != nil {
 		return nil, fmt.Errorf("parsing walkerfile: %w", err)
 	}
@@ -36,29 +37,29 @@ func LoadWalkerFile(dir string) (*WalkerFile, error) {
 	return &wf, nil
 }
 
-func DefaultWalkerFile() *WalkerFile {
-	return &WalkerFile{
+func DefaultWalkerFile() *types.WalkerFile {
+	return &types.WalkerFile{
 		Path:    ".",
 		Structs: "auto",
-		Output: OutputConfig{
-			JSON: JSONOutputConfig{
+		Output: types.OutputConfig{
+			JSON: types.JSONOutputConfig{
 				Path:   ".walker/context.json",
 				Pretty: true,
 			},
-			YAML: YAMLOutputConfig{
+			YAML: types.YAMLOutputConfig{
 				Path: ".walker/context.yml",
 			},
 		},
-		Scanner: ScannerConfig{
+		Scanner: types.ScannerConfig{
 			FollowSymlinks: false,
 			MaxDepth:       0,
 			SkipDirs:       []string{".walker", ".git", "vendor", "node_modules"},
 		},
-		Bracket: BracketConfig{
+		Bracket: types.BracketConfig{
 			MaxDepth:           10,
 			CrossFunctionScope: true,
 		},
-		Context: ContextConfig{
+		Context: types.ContextConfig{
 			IncludeLineNumbers: true,
 			IncludeHandler:     true,
 			IncludeDBKind:      true,
@@ -69,13 +70,13 @@ func DefaultWalkerFile() *WalkerFile {
 
 // LoadStructsFromDir loads all LanguageStruct definitions from a directory.
 // Filtering by walkerfile allowlist is a separate concern — see ApplyCustomPatterns.
-func LoadStructsFromDir(structsDir string) (map[Language]*LanguageStruct, error) {
+func LoadStructsFromDir(structsDir string) (map[types.Language]*types.LanguageStruct, error) {
 	entries, err := filepath.Glob(filepath.Join(structsDir, "*.yml"))
 	if err != nil {
 		return nil, fmt.Errorf("reading structs dir: %w", err)
 	}
 
-	result := map[Language]*LanguageStruct{}
+	result := map[types.Language]*types.LanguageStruct{}
 	for _, entry := range entries {
 		ls, err := loadStructFile(entry)
 		if err != nil {
@@ -88,7 +89,7 @@ func LoadStructsFromDir(structsDir string) (map[Language]*LanguageStruct, error)
 
 // LoadStructsFiltered loads only the structs named in the walkerfile allowlist.
 // Pass wf.Structs == "auto" to load all.
-func LoadStructsFiltered(structsDir string, wf *WalkerFile) (map[Language]*LanguageStruct, error) {
+func LoadStructsFiltered(structsDir string, wf *types.WalkerFile) (map[types.Language]*types.LanguageStruct, error) {
 	all, err := LoadStructsFromDir(structsDir)
 	if err != nil {
 		return nil, err
@@ -111,7 +112,7 @@ func LoadStructsFiltered(structsDir string, wf *WalkerFile) (map[Language]*Langu
 		return all, nil
 	}
 
-	filtered := map[Language]*LanguageStruct{}
+	filtered := map[types.Language]*types.LanguageStruct{}
 	for lang, ls := range all {
 		if allowed[string(lang)] {
 			filtered[lang] = ls
@@ -121,7 +122,7 @@ func LoadStructsFiltered(structsDir string, wf *WalkerFile) (map[Language]*Langu
 }
 
 // ApplyCustomPatterns merges walkerfile custom patterns into loaded structs.
-func ApplyCustomPatterns(structs map[Language]*LanguageStruct, custom CustomPatterns) {
+func ApplyCustomPatterns(structs map[types.Language]*types.LanguageStruct, custom types.CustomPatterns) {
 	for _, ls := range structs {
 		ls.RouterRegistration = append(ls.RouterRegistration, custom.RouterRegistration...)
 		ls.GroupPrefix = append(ls.GroupPrefix, custom.GroupPrefix...)
@@ -130,12 +131,12 @@ func ApplyCustomPatterns(structs map[Language]*LanguageStruct, custom CustomPatt
 	}
 }
 
-func loadStructFile(path string) (*LanguageStruct, error) {
+func loadStructFile(path string) (*types.LanguageStruct, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var ls LanguageStruct
+	var ls types.LanguageStruct
 	if err := yaml.Unmarshal(data, &ls); err != nil {
 		return nil, fmt.Errorf("parsing struct file %q: %w", path, err)
 	}
@@ -144,5 +145,5 @@ func loadStructFile(path string) (*LanguageStruct, error) {
 
 func init() {
 	// Ensure the map is populated even if loader.go is the only file imported.
-	_ = ExtensionLanguage
+	_ = types.ExtensionLanguage
 }

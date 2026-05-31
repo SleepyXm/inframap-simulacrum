@@ -6,7 +6,7 @@ import (
 	"db-seeder/simulation/types"
 	"db-seeder/structs"
 	"db-seeder/tools"
-	"db-seeder/walker"
+	walker_types "db-seeder/walker/types"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -17,7 +17,7 @@ import (
 )
 
 type SimTool struct {
-	ctx   *walker.ProjectContext
+	ctx   *walker_types.ProjectContext
 	dir   string
 	ready bool
 }
@@ -27,7 +27,7 @@ func NewTool(dir string) (*SimTool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("sim: no walker output found — run walker first: %w", err)
 	}
-	var ctx walker.ProjectContext
+	var ctx walker_types.ProjectContext
 	if err := json.Unmarshal(data, &ctx); err != nil {
 		return nil, fmt.Errorf("sim: invalid walker output: %w", err)
 	}

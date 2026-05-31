@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"db-seeder/simulation/corpus"
 	"db-seeder/simulation/types"
-	"db-seeder/walker"
+	walker_types "db-seeder/walker/types"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,14 +16,14 @@ import (
 // Stage1Config is everything RunStage1 needs to know:
 // where the app is running, what endpoints exist, and how to extract the auth token.
 type Stage1Config struct {
-	BaseURL    string                 // e.g. "http://localhost:8080"
-	Context    *walker.ProjectContext // walker output — the list of known endpoints
-	AuthConfig types.AuthConfig       // tells us where to find the token in the login response
+	BaseURL    string                       // e.g. "http://localhost:8080"
+	Context    *walker_types.ProjectContext // walker output — the list of known endpoints
+	AuthConfig types.AuthConfig             // tells us where to find the token in the login response
 }
 
 // findAuthEndpoints scans the walker output for POST /signup and POST /login.
 // We need these two paths to run stage 1 — if either is missing we can't proceed.
-func findAuthEndpoints(ctx *walker.ProjectContext) (signup, login string) {
+func findAuthEndpoints(ctx *walker_types.ProjectContext) (signup, login string) {
 	// ctx.Files is every source file the walker scanned
 	for _, file := range ctx.Files {
 		// each file has a list of endpoints the walker found in it

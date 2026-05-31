@@ -1,6 +1,7 @@
 package walker
 
 import (
+	"db-seeder/walker/types"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func WriteJSON(ctx *ProjectContext, cfg JSONOutputConfig) error {
+func WriteJSON(ctx *types.ProjectContext, cfg types.JSONOutputConfig) error {
 	if err := os.MkdirAll(filepath.Dir(cfg.Path), 0755); err != nil {
 		return fmt.Errorf("creating output dir: %w", err)
 	}
@@ -26,7 +27,7 @@ func WriteJSON(ctx *ProjectContext, cfg JSONOutputConfig) error {
 	return os.WriteFile(cfg.Path, data, 0644)
 }
 
-func WriteYAML(ctx *ProjectContext, cfg YAMLOutputConfig) error {
+func WriteYAML(ctx *types.ProjectContext, cfg types.YAMLOutputConfig) error {
 	if err := os.MkdirAll(filepath.Dir(cfg.Path), 0755); err != nil {
 		return fmt.Errorf("creating output dir: %w", err)
 	}

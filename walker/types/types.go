@@ -1,4 +1,4 @@
-package walker
+package types
 
 // Language is a detected source language.
 type Language string
@@ -10,10 +10,11 @@ const (
 )
 
 // ExtensionLanguage maps file extensions to Language constants.
-// Kept here so scanner.go has no loader dependency.
 var ExtensionLanguage = map[string]Language{
 	".go": LangGo,
 	".py": LangPython,
+	".js": LangUnknown,
+	".ts": LangUnknown,
 }
 
 // ---------------------------------------------------------------------------
@@ -107,6 +108,25 @@ type ContextConfig struct {
 }
 
 // ---------------------------------------------------------------------------
+// Cross-file prefix resolution
+// ---------------------------------------------------------------------------
+
+// RouteRegistration records a call-site where a sub-router is handed to a
+// function, e.g.:
+//
+//	routes.RegisterAuthRoutes(api.Group("/auth"), db)
+//
+// FuncName is "RegisterAuthRoutes"; ResolvedPrefix is "/api/auth" (already
+// flattened by the first-pass scan of the entry-point file).
+// The runner uses this to find the file that defines FuncName and re-scans
+// it with ResolvedPrefix as an inherited prefix.
+type RouteRegistration struct {
+	FuncName       string // name of the registration function called
+	ResolvedPrefix string // fully resolved prefix at the call site
+	Line           int    `json:"line,omitempty"`
+}
+
+// ---------------------------------------------------------------------------
 // Output types (written to context.json and context.yml)
 // ---------------------------------------------------------------------------
 
@@ -132,7 +152,6 @@ type ModelDef struct {
 	Fields map[string]string `json:"fields,omitempty"`
 }
 
-// ------------------ Specifics of extracted data types ------------------
 // Endpoint represents a single matched route registration.
 type Endpoint struct {
 	Method   string `json:"method"`
