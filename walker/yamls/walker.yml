@@ -1,0 +1,35 @@
+# walkerfile.yml
+# Project-level configuration for walker.
+# Place this file in the root of the project you want to scan.
+
+path: "."
+
+output:
+  json:
+    path: ".walker/output.json"
+    pretty: true
+
+  yaml:
+    path: ".walker/output.yml"
+
+capture:
+  config_path: ""
+  rules_dir: "walker/yamls/code-specific"
+
+  skip_dirs:
+    - ".walker"
+    - ".git"
+    - "vendor"
+    - "node_modules"
+    - "dist"
+    - "build"
+    - ".next"
+    - "coverage"
+    - "__pycache__"
+
+  skip_files:
+    - "*.min.js"
+    - "*.map"
+    - "*.lock"
+
+  include_only: []
