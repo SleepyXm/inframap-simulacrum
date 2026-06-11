@@ -67,6 +67,7 @@ func (c *Corpus) flush() error {
 	}
 	return os.WriteFile(c.path, data, 0644)
 }
+
 func DeleteCorpus(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil
@@ -122,6 +123,14 @@ func DeleteCorpus(path string) error {
 			return fmt.Errorf("corpus: deleting users from db: %w", err)
 		}
 		fmt.Printf("corpus: deleted %d rows\n", tag.RowsAffected())
+	}
+
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("corpus: closing file: %w", err)
+	}
+
+	if err := os.Remove(path); err != nil {
+		return fmt.Errorf("corpus: deleting file: %w", err)
 	}
 
 	return nil
