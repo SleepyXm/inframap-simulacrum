@@ -29,6 +29,14 @@ func summariseCaptureToLines(result *CaptureResult) []tools.SummaryLine {
 		}
 	}
 
+	for _, lang := range result.Languages {
+		lines = append(lines, tools.SummaryLine{
+			Value:  fmt.Sprintf("%-12s %d files", lang.Name, lang.FileCount),
+			Indent: true,
+		})
+	}
+
+	lines = append(lines, tools.SummaryLine{Label: "languages", Value: fmt.Sprintf("%d", len(result.Languages))})
 	lines = append(lines, tools.SummaryLine{Label: "files captured", Value: fmt.Sprintf("%d", files)})
 	lines = append(lines, tools.SummaryLine{Label: "functions", Value: fmt.Sprintf("%d", functions)})
 	lines = append(lines, tools.SummaryLine{Label: "classes", Value: fmt.Sprintf("%d", classes)})

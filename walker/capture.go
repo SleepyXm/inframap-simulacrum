@@ -22,9 +22,35 @@ type DirGroup struct {
 	Files []worker.FileSnapshot `json:"files" yaml:"files"`
 }
 
+type LanguageSummary struct {
+	Name      string `json:"name" yaml:"name"`
+	FileCount int    `json:"file_count" yaml:"file_count"`
+}
+
 type CaptureResult struct {
+	Languages []LanguageSummary     `json:"languages" yaml:"languages"`
 	Groups    []DirGroup            `json:"groups" yaml:"groups"`
 	Snapshots []worker.FileSnapshot `json:"-" yaml:"-"`
+}
+
+func languageSummaries(groups map[string]*scanner.LangGroup) []LanguageSummary {
+	names := make([]string, 0, len(groups))
+	for name := range groups {
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+
+	out := make([]LanguageSummary, 0, len(names))
+	for _, name := range names {
+		group := groups[name]
+		out = append(out, LanguageSummary{
+			Name:      name,
+			FileCount: len(group.Paths),
+		})
+	}
+
+	return out
 }
 
 func Capture(opts CaptureOptions) (*CaptureResult, error) {
@@ -82,6 +108,7 @@ func Capture(opts CaptureOptions) (*CaptureResult, error) {
 	grouped := groupSnapshotsByDir(opts.TargetDir, snapshots)
 
 	return &CaptureResult{
+		Languages: languageSummaries(groups),
 		Groups:    grouped,
 		Snapshots: snapshots,
 	}, nil

@@ -62,11 +62,11 @@ func (t *WalkerTool) run(scanPath string) tools.ToolResult {
 	}
 
 	// Preserve current true-walker JSON shape: []DirGroup
-	if err := WriteJSON(captured.Groups, t.wf.Output.JSON); err != nil {
+	if err := WriteJSON(captured, t.wf.Output.JSON); err != nil {
 		return tools.ToolResult{Err: err}
 	}
 
-	if err := WriteYAML(captured.Groups, t.wf.Output.YAML); err != nil {
+	if err := WriteYAML(captured, t.wf.Output.YAML); err != nil {
 		return tools.ToolResult{Err: err}
 	}
 
