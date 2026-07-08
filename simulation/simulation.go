@@ -28,12 +28,16 @@ func findAuthEndpoints(ctx *walker_types.ProjectContext) (signup, login string) 
 	for _, file := range ctx.Files {
 		// each file has a list of endpoints the walker found in it
 		for _, ep := range file.Endpoints {
-			path := strings.ToLower(ep.FullPath)
-			if ep.Method == "POST" && strings.Contains(path, "signup") {
-				signup = ep.FullPath
+			path := ep.FullPath
+			if path == "" {
+				path = ep.Path
 			}
-			if ep.Method == "POST" && strings.Contains(path, "login") {
-				login = ep.FullPath
+			lowerPath := strings.ToLower(path)
+			if strings.EqualFold(ep.Method, "POST") && strings.Contains(lowerPath, "signup") {
+				signup = path
+			}
+			if strings.EqualFold(ep.Method, "POST") && strings.Contains(lowerPath, "login") {
+				login = path
 			}
 		}
 	}

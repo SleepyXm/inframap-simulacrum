@@ -150,44 +150,44 @@ type RouteRegistration struct {
 
 // ProjectContext is the root output type — written to context.json.
 type ProjectContext struct {
-	Files []FileContext `json:"files"`
+	Files []FileContext `json:"files" yaml:"files"`
 }
 
 // FileContext holds all extracted data for a single source file.
 type FileContext struct {
-	Path      string     `json:"path"`
-	Language  Language   `json:"language"`
-	Endpoints []Endpoint `json:"endpoints,omitempty"`
-	DBCalls   []DBCall   `json:"db_calls,omitempty"`
-	Models    []ModelDef `json:"models,omitempty"`
+	Path      string     `json:"path" yaml:"path"`
+	Language  Language   `json:"language" yaml:"language"`
+	Endpoints []Endpoint `json:"endpoints,omitempty" yaml:"endpoints,omitempty"`
+	DBCalls   []DBCall   `json:"db_calls,omitempty" yaml:"db_calls,omitempty"`
+	Models    []ModelDef `json:"models,omitempty" yaml:"models,omitempty"`
 }
 
 // ModelDef represents a detected data model (SQLAlchemy, Pydantic, Go struct).
 type ModelDef struct {
-	Name   string            `json:"name"`
-	Kind   string            `json:"kind"` // "db_model", "request_model", "struct"
-	Line   int               `json:"line,omitempty"`
-	Fields map[string]string `json:"fields,omitempty"`
+	Name   string            `json:"name" yaml:"name"`
+	Kind   string            `json:"kind" yaml:"kind"` // "db_model", "request_model", "struct"
+	Line   int               `json:"line,omitempty" yaml:"line,omitempty"`
+	Fields map[string]string `json:"fields,omitempty" yaml:"fields,omitempty"`
 }
 
 // Endpoint represents a single matched route registration.
 type Endpoint struct {
-	Method   string `json:"method"`
-	Path     string `json:"path"`
-	FullPath string `json:"full_path,omitempty"` // prefix-resolved
-	Handler  string `json:"handler,omitempty"`
-	Line     int    `json:"line,omitempty"`
-	RawLine  string `json:"raw_line,omitempty"`
+	Method   string `json:"method" yaml:"method"`
+	Path     string `json:"path" yaml:"path"`
+	FullPath string `json:"full_path,omitempty" yaml:"full_path,omitempty"` // prefix-resolved
+	Handler  string `json:"handler,omitempty" yaml:"handler,omitempty"`
+	Line     int    `json:"line,omitempty" yaml:"line,omitempty"`
+	RawLine  string `json:"raw_line,omitempty" yaml:"raw_line,omitempty"`
 }
 
 // DBCall represents a single matched database call site.
 type DBCall struct {
-	Library string `json:"library,omitempty"`
-	Kind    string `json:"kind,omitempty"`
-	Query   string `json:"query,omitempty"` // extracted SQL if available
-	Handler string `json:"handler,omitempty"`
-	Line    int    `json:"line,omitempty"`
-	RawLine string `json:"raw_line,omitempty"`
+	Library string `json:"library,omitempty" yaml:"library,omitempty"`
+	Kind    string `json:"kind,omitempty" yaml:"kind,omitempty"`
+	Query   string `json:"query,omitempty" yaml:"query,omitempty"` // extracted SQL if available
+	Handler string `json:"handler,omitempty" yaml:"handler,omitempty"`
+	Line    int    `json:"line,omitempty" yaml:"line,omitempty"`
+	RawLine string `json:"raw_line,omitempty" yaml:"raw_line,omitempty"`
 }
 
 /// ------------------ Internal types (not serialized) ------------------

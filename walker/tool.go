@@ -61,7 +61,13 @@ func (t *WalkerTool) run(scanPath string) tools.ToolResult {
 		}
 	}
 
-	// Preserve current true-walker JSON shape: []DirGroup
+	context := BuildProjectContext(captured)
+	if err := ValidateProjectContext(&context); err != nil {
+		return tools.ToolResult{
+			Err: fmt.Errorf("invalid walker context: %w", err),
+		}
+	}
+
 	if err := WriteJSON(captured, t.wf.Output.JSON); err != nil {
 		return tools.ToolResult{Err: err}
 	}
@@ -70,11 +76,21 @@ func (t *WalkerTool) run(scanPath string) tools.ToolResult {
 		return tools.ToolResult{Err: err}
 	}
 
+	if err := WriteJSON(context, ContextJSONOutput); err != nil {
+		return tools.ToolResult{Err: err}
+	}
+
+	if err := WriteYAML(context, ContextYAMLOutput); err != nil {
+		return tools.ToolResult{Err: err}
+	}
+
 	return tools.ToolResult{
 		Summary: summariseCaptureToLines(captured),
 		Outputs: []string{
 			t.wf.Output.JSON.Path,
 			t.wf.Output.YAML.Path,
+			ContextJSONOutput.Path,
+			ContextYAMLOutput.Path,
 		},
 	}
 }

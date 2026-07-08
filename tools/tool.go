@@ -18,7 +18,7 @@ type ToolDoneMsg struct {
 
 type ToolResult struct {
 	Summary []SummaryLine // ordered display rows
-	Outputs []string      // file paths written, e.g. [".walker/context.json"]
+	Outputs []string      // file paths written, e.g. [".walker/output.json"]
 	Err     error
 }
 

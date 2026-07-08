@@ -194,9 +194,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case viewToolInput:
 				input := m.input.Value()
-				if input == "" {
-					input = "."
-				}
 				m.current = viewToolRunning
 				return m, m.activeTool.Run(input)
 
@@ -342,7 +339,7 @@ func testView(m model) string {
 }
 
 func toolInputView(m model) string {
-	s := m.activeTool.Name() + " — path to scan:\n\n"
+	s := m.activeTool.Name() + " input:\n\n"
 	s += m.input.View()
 	s += "\n\npress enter to start, q to go back"
 	return s

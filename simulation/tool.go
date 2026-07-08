@@ -12,34 +12,60 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type SimTool struct {
-	ctx   *walker_types.ProjectContext
-	dir   string
-	ready bool
+	ctx *walker_types.ProjectContext
+	dir string
 }
 
 func NewTool(dir string) (*SimTool, error) {
-	data, err := os.ReadFile(filepath.Join(dir, ".walker/context.json"))
-	if err != nil {
-		return nil, fmt.Errorf("sim: no walker output found — run walker first: %w", err)
+	if strings.TrimSpace(dir) == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, fmt.Errorf("sim: could not determine working directory: %w", err)
+		}
+		dir = cwd
 	}
-	var ctx walker_types.ProjectContext
-	if err := json.Unmarshal(data, &ctx); err != nil {
-		return nil, fmt.Errorf("sim: invalid walker output: %w", err)
-	}
-	if len(ctx.Files) == 0 {
-		return nil, fmt.Errorf("sim: walker context is empty — run walker first")
-	}
-	return &SimTool{ctx: &ctx, dir: dir, ready: true}, nil
+
+	return &SimTool{dir: dir}, nil
 }
 
-func (t *SimTool) Name() string    { return "Simulation" }
-func (t *SimTool) Available() bool { return t.ready }
-func (t *SimTool) Prompt() string  { return "http://localhost:9000/api/auth" } // base URL, not a path
+func (t *SimTool) Name() string { return "Simulation" }
+
+func (t *SimTool) Available() bool {
+	return t.loadContext() == nil
+}
+
+func (t *SimTool) Prompt() string { return "http://localhost:9000/api/auth" } // base URL, not a path
+
+func (t *SimTool) contextPath() string {
+	return filepath.Join(t.dir, ".walker/context.json")
+}
+
+func (t *SimTool) loadContext() error {
+	data, err := os.ReadFile(t.contextPath())
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("sim: no walker context found - run walker first: %w", err)
+		}
+		return fmt.Errorf("sim: reading walker context: %w", err)
+	}
+
+	var ctx walker_types.ProjectContext
+	if err := json.Unmarshal(data, &ctx); err != nil {
+		return fmt.Errorf("sim: invalid walker context: %w", err)
+	}
+	if len(ctx.Files) == 0 {
+		return fmt.Errorf("sim: walker context is empty - run walker first")
+	}
+
+	t.ctx = &ctx
+	return nil
+}
 
 func (t *SimTool) Run(input string) tea.Cmd {
 	return func() tea.Msg {
@@ -49,9 +75,18 @@ func (t *SimTool) Run(input string) tea.Cmd {
 }
 
 func (t *SimTool) run(baseURL string) tools.ToolResult {
+	if err := t.loadContext(); err != nil {
+		return tools.ToolResult{Err: err}
+	}
+
+	baseURL = strings.TrimSpace(baseURL)
+	if baseURL == "" {
+		baseURL = t.Prompt()
+	}
+
 	c := corpus.New(filepath.Join(t.dir, corpus.DefaultPath))
 
-	users := generateVirtualUsers(50) // sensible default, make configurable later
+	users := generateVirtualUsers(1000) // sensible default, make configurable later
 
 	cfg := Stage1Config{
 		BaseURL: baseURL,
@@ -128,11 +163,11 @@ func summariseToLines(c *corpus.Corpus) []tools.SummaryLine {
 }
 
 func countFailed(c *corpus.Corpus) int {
-	// failed users never made it into corpus — tracked separately in future
+	// Failed users never made it into corpus; track them separately later.
 	return 0
 }
 
-// GenPerson wraps the existing generator — keeps tool.go self-contained.
+// GenPerson wraps the existing generator and keeps tool.go self-contained.
 func GenPerson() structs.Person {
 	firstname := structs.FirstNames[rand.Intn(len(structs.FirstNames))]
 	lastname := structs.LastNames[rand.Intn(len(structs.LastNames))]

@@ -14,11 +14,13 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 	//"log"
 )
 
 func main() {
 	fmt.Println("Hello, World!")
+	godotenv.Load()
 	db.CreateDatabase()
 	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
