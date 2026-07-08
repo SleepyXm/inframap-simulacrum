@@ -1,0 +1,29 @@
+files:
+    - path: /Users/percedoutprince/Desktop/VSCodeProjects/Backend/Go/tree-sit/samples/fastapi.py
+      language: python
+      endpoints:
+        - method: GET
+          path: /users
+          fullpath: /users
+          handler: ""
+          line: 5
+          rawline: ""
+      dbcalls: []
+      models: []
+    - path: /Users/percedoutprince/Desktop/VSCodeProjects/Backend/Go/tree-sit/samples/go_gin.go
+      language: go
+      endpoints:
+        - method: GET
+          path: /users
+          fullpath: /users
+          handler: main
+          line: 19
+          rawline: ""
+        - method: POST
+          path: /login
+          fullpath: /login
+          handler: main
+          line: 20
+          rawline: ""
+      dbcalls: []
+      models: []

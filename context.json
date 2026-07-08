@@ -1,0 +1,36 @@
+{
+  "files": [
+    {
+      "path": "/Users/percedoutprince/Desktop/VSCodeProjects/Backend/Go/tree-sit/samples/fastapi.py",
+      "language": "python",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/users",
+          "full_path": "/users",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "path": "/Users/percedoutprince/Desktop/VSCodeProjects/Backend/Go/tree-sit/samples/go_gin.go",
+      "language": "go",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/users",
+          "full_path": "/users",
+          "handler": "main",
+          "line": 19
+        },
+        {
+          "method": "POST",
+          "path": "/login",
+          "full_path": "/login",
+          "handler": "main",
+          "line": 20
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "API": "http://localhost:9000",
+  "db_url": "postgresql://myapp_user:superuser@localhost/hyjacked"
+}
